@@ -45,6 +45,7 @@ class Spot:
         self.nr = nr
         self.state = state
 
+    #pārbauda, vai izvelētā vieta atbilst kādam laukam
     def checkSpot(ar,ar2,ix,iy): #ar = empty spots, ar2 = taken spots
         for s in ar:
             Rx=s.x+100
@@ -58,6 +59,7 @@ class Spot:
                 return j
         return 0
 
+    #pārbauda, vai atbilst kādam laukam, gadījumā, kad veic pārnešanu
     def checkSpot_movable(ar,ix,iy): #ar = empty
         #global movable
         for s in ar: #apskatamies vai ir izvēlēts tukšs lauks
@@ -68,11 +70,11 @@ class Spot:
                 return s
         return 0
 
+    #pārbauda, vai divreiz netiek izvēlēts viens un tas pats lauks.
     def checkIfSelectedTwice(sel,ix,iy):
         Rx=sel.x+100
         Ry=sel.y+100
         if ((ix-Rx)*(ix-Rx)+(iy-Ry)*(iy-Ry)) < 100**2:
-                print('selected is the same as before')
                 return sel 
         return 0
 
@@ -116,7 +118,7 @@ def place_marble(pl,x,y):
     if pl == 2:
         screen.blit(player2_set,(x,y))
         Player2_marbles=Player2_marbles-1
-
+#pārnešanas gadījumā, noņem uz lauka esošo lodīti, nodrošina atlikušo lodišu skaita nemainīgumu
 def take_marble(pl,spot):
     global Player
     global Player1_marbles
@@ -189,6 +191,7 @@ class Board:
         self.empty_spots = self.spots
         self.taken_spots = arrayTaken
     
+    #pārbauda, vai uz izvēlētais lauks ir pieejams uz spēles laukuma
     def checkBoard(self, nr):
         global Player
         skaitlis = 0
@@ -201,6 +204,7 @@ class Board:
                 skaitlis = 2
         return skaitlis
 
+    #pārbauda, vai izvēlētais lauks ir pieejams uz spēles laukuma AI gājiena gadījumā
     def checkBoardForAI(self, ai, AI_board_empty, AI_board_taken, numurs):
         global Player
         skaitlis = 0
@@ -217,30 +221,25 @@ class Board:
         #         skaitlis = 2
         return skaitlis
 
+    #pārnešanas gadījumā ar šo metodi pārbauda, vai ir iespējams tur pārlikt lodīti
     def checkBoardForMove(self,empty_spots,new_select_spot):
-        global Player
         for n in empty_spots:
             if n.nr == new_select_spot.nr:
                 return 1
         return 0
 
+    #pievieno lauciņu kā aizņemtu
     def addTaken(self,spot):
         self.taken_spots.append(spot)
-        print(spot.nr,' NR HAS BEEN APPENDED TO TAKEN SPOTS')
 
+    #lauciņa atbrīvošanas gadījumā pieliek atpakaļ pie brīvajiem lauciņiems
     def addToEmpty(self,spot):
         spot.state=0
         self.empty_spots.append(spot)
         if spot in self.empty_spots:
             print(spot.nr,'HAS BEEN ADDED BACK TO LIST OF EMPTY')
-    
-    def takeBackMarble(self,spot):
-        for n in self.taken_spots:
-            if n.nr == spot.nr:
-                self.taken_spots.pop(spot)
-                spot.state=0
-                self.empty_spots.append(spot)
 
+    #pārbauda, vai ir veidojies kvadrāts uz lauka pirmā līmeņa, ja ir, tad pievieno kā iespējamu gājiena lauciņu tā vidū esošo lauciņu. 
     def checkPossibleLevels(self):
         arrayNr=[]
         arrayNr_empty=[]
@@ -270,6 +269,7 @@ class Board:
             top=Spot(401,506,14,0)
             self.empty_spots.append(top)
 
+    #pārbauda vai pēc pārnešanas veikšanas nav atbrīvojies kāds pirmā līmeņa kvadrāts.Ja ir, tad tā virsotni izņem no iespējamo gājienu saraksta.
     def checkPossibleToDeleteLevel(self):
         arrayNr_takenSpots=[]
         arrayNr_emptySpots=[]
@@ -298,12 +298,9 @@ class Board:
                 nr13=Spot(538.5,643.5,13,0)
                 idx=self.empty_spots.index(nr13)
                 self.empty_spots.pop(idx)
-        # if (10 in arrayNr and 11 in arrayNr and 12 in arrayNr and 13 in arrayNr) and 14 in arrayNr:
-        #     top=Spot(401,506,14,0)
-        #     idx=self.empty_spots.index(nr14)
-        #     self.empty_spots.pop(idx)
 
 
+    #pāŗbauda, vai ir sasniegta uzvara
     def checkWin(self):
         arrayNr=[]
         global text_winner
@@ -318,7 +315,7 @@ class Board:
             return 7
         return False
 
-
+    #pārbauda izvēlētās pārnešanai lodītes pacelšanas lauciņus
     def checkWhereToMoveSpot(self,spot):
         numbersForSpots = [] #jaunais empty array ko es izmantosu updateosanai kamer kaulins ir selected
         for m in movableToSquare1.possibleNr:
@@ -339,7 +336,7 @@ class Board:
                 numbersForSpots.append(nr13)
         return numbersForSpots #jaunais "empty" spot array
 
-
+    #maina spēles lauka stāvokli, gadījumā, kad notiek pacelšana
     def updateStateWithMove(self,selectedSpot, newEmpty, spot):
         global Player
         # global game_active
@@ -359,7 +356,6 @@ class Board:
                         take_marble(Player,selectedSpot)
                         place_marble(Player,spot.x,spot.y)
                         pl = next_move_AI(Player)
-                        #Player = pl
                         checkMarbles()
                         newEmpty=[]
                         self.checkPossibleToDeleteLevel()
@@ -374,7 +370,6 @@ class Board:
         elif AI ==True:
             gajiens = copy.deepcopy(Player % 2 + 1) 
         global game_active
-        thisMove = Player
         for n in self.empty_spots:
             if n.nr == spot.nr:
                 idx=self.empty_spots.index(n)
@@ -392,7 +387,6 @@ class Board:
         pl = copy.deepcopy(next_move_AI(gajiens))
         #---------------------------
         checkMarbles()
-        #Player = pl
         #ja var tad pievieno nākamā līmeņa empty spots
         self.checkPossibleLevels()
         return pl
@@ -411,7 +405,7 @@ class AI:
             all_selectable_nrs.append((n.nr))
         taken_for_AI = copy.deepcopy(board_taken)  
         for m in taken_for_AI:
-            if m.state == self.player and m.nr < 10:# and m.nr: #< 10:
+            if m.state == self.player and m.nr < 10:
                 all_selectable_coords.append((m.x,m.y))
                 all_selectable_nrs.append((m.nr))
         #checkBoard - 1 ir ok, 2 ir riktigi labi
@@ -505,13 +499,13 @@ while True:
                 pozx2, pozy2 = pygame.mouse.get_pos()
                 #pārbauda vai ir "deselected"
                 second_selection = Spot.checkIfSelectedTwice(selectedd,pozx2,pozy2)
-                print(second_selection)
                 if second_selection != 0:
                     print('MARBLE HAS BEEN DESELECTED')
                     game_active = 1
                 else:
                     new_empty = board.checkWhereToMoveSpot(selectedd)
                     place_valid = Spot.checkSpot_movable(new_empty, pozx2, pozy2)
+
                     #PLACE_VALID atgriež vai nu ja iespējams pārlikt to lauku, vai arī 0
                     if place_valid != 0:
                         place_free = board.checkBoardForMove(new_empty,place_valid)
@@ -555,15 +549,12 @@ while True:
                 if event.key == pygame.K_1:
                     Player=1
                     ai = AI(2)
-                    #i = AI(2)
-                    #Player 2 = AI
                     screen.fill((248, 231, 209))
                     screen.blit(board_img,(0,105))
                     game_active = 1
                 if event.key == pygame.K_2:
                     Player=2
                     ai = AI(1)
-                    #Player 1 = AI
                     screen.fill((248, 231, 209))
                     screen.blit(board_img,(0,105))
                     game_active = 1
